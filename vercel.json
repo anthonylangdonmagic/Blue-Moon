@@ -1,0 +1,12 @@
+{
+    "git": {
+        "deploymentEnabled": {
+            "main": true
+        }
+    },
+    "github": {
+        "silent": true
+    },
+    "buildCommand": "npm run build",
+    "installCommand": "npm install"
+}
