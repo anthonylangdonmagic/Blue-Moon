@@ -1,0 +1,13 @@
+#include <iostream>
+#include <math.h>
+int main(){
+    int a
+    int b
+    
+    cout << "Please input two integer values"<< endl;
+    cin << "a";
+    cin<< "b";
+
+    int sum(a,b)
+}
+return 0

@@ -1,0 +1,77 @@
+#include <iostream>
+using namespace std;
+
+char board[9] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
+
+void print_board() {
+    cout << "| " << board[0] << " | " << board[1] << " | " << board[2] << " |" << endl;
+    cout << "|---|---|---|" << endl;
+    cout << "| " << board[3] << " | " << board[4] << " | " << board[5] << " |" << endl;
+    cout << "|---|---|---|" << endl;
+    cout << "| " << board[6] << " | " << board[7] << " | " << board[8] << " |" << endl;
+}
+
+bool check_win(char player) {
+    // check rows
+    for(int i = 0; i < 9; i += 3) {
+        if(board[i] == player && board[i + 1] == player && board[i + 2] == player) {
+            return true;
+        }
+    }
+    // check columns
+    for(int i = 0; i < 3; i++) {
+        if(board[i] == player && board[i + 3] == player && board[i + 6] == player) {
+            return true;
+        }
+    }
+    // check diagonals
+    if(board[0] == player && board[4] == player && board[8] == player) {
+        return true;
+    }
+    if(board[2] == player && board[4] == player && board[6] == player) {
+        return true;
+    }
+    return false;
+}
+
+bool check_draw() {
+    for(int i = 0; i < 9; i++) {
+        if(board[i] == ' ') {
+            return false;
+        }
+    }
+    return true;
+}
+
+int main() {
+    cout << "Tic-Tac-Toe Game" << endl;
+    cout << "Player 1 (X)  -  Player 2 (O)" << endl;
+    while(true) {
+        print_board();
+        int player;
+        char mark;
+        if(turn % 2 == 0) {
+            player = 1;
+            mark = 'X';
+        } else {
+            player = 2;
+            mark = 'O';
+        }
+        cout << "Player " << player << ", enter the number of the cell where you want to place your mark:" << endl;
+        int cell;
+        cin >> cell;
+        cell--;
+        if(board[cell] == ' ') {
+            board[cell] = mark;
+            if(check_win(mark)) {
+                print_board();
+                cout << "Player " << player << " wins!" << endl;
+                break;
+            } else if(check_draw()) {
+                print_board();
+                cout << "It's a draw!" << endl;
+                break;
+            }
+        }
+
+
