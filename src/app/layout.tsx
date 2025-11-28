@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { MoonBackground } from "@/components/MoonBackground";
+import { Navbar } from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +30,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <MoonBackground />
-        <main className="flex-1 relative z-10">
+        <Navbar />
+        <main className="flex-1 relative z-10 pt-16">
           {children}
         </main>
       </body>

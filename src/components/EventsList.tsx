@@ -1,13 +1,10 @@
-import { createClient } from "@/lib/supabase-server";
+import { getDatabase } from "@/lib/db";
 import { Calendar, MapPin } from "lucide-react";
 import { SubscribeForm } from "./SubscribeForm";
 
 export async function EventsList() {
-    const supabase = await createClient();
-    const { data: events } = await supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: true });
+    const db = await getDatabase();
+    const events = db.events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return (
         <div className="max-w-3xl mx-auto px-4 py-12">

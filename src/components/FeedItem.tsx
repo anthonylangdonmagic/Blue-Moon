@@ -54,21 +54,64 @@ export function FeedItem({ post }: { post: Post }) {
             </div>
 
             {/* Media (TikTok/Video) */}
+            {/* Media (Video/Image) */}
             {post.media_url && (
-                <div className="mb-4 rounded-lg overflow-hidden border border-slate-800">
-                    {/* Simple iframe for now, can be enhanced for specific platforms */}
-                    <iframe
-                        src={post.media_url}
-                        className="w-full aspect-video"
-                        allowFullScreen
-                        title="Embedded Media"
-                    />
+                <div className="mb-4 rounded-lg overflow-hidden border border-slate-800 bg-black">
+                    {/* Check file extension to determine type */}
+                    {post.media_url.match(/\.(mp4|webm|ogg|mov)$/i) ? (
+                        <video
+                            src={post.media_url}
+                            controls
+                            className="w-full max-h-[600px]"
+                            preload="metadata"
+                        />
+                    ) : post.media_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={post.media_url}
+                            alt="Post media"
+                            className="w-full h-auto object-contain max-h-[600px]"
+                        />
+                    ) : (
+                        // Fallback for external embeds if any legacy data exists
+                        <iframe
+                            src={post.media_url}
+                            className="w-full aspect-video"
+                            allowFullScreen
+                            title="Embedded Media"
+                        />
+                    )}
                 </div>
             )}
 
             {/* Actions */}
             <div className="flex items-center space-x-6 text-slate-400 mb-2">
-                <button className="flex items-center space-x-2 hover:text-blue-400 transition-colors">
+                <button
+                    onClick={async () => {
+                        const shareData = {
+                            title: post.title || "Blue Moon Post",
+                            text: post.content?.substring(0, 100) + "...",
+                            url: window.location.origin + (post.slug ? `/post/${post.slug}` : ""), // Assuming post routes exist, otherwise just root
+                        };
+
+                        if (navigator.share) {
+                            try {
+                                await navigator.share(shareData);
+                            } catch (err) {
+                                console.log("Share cancelled");
+                            }
+                        } else {
+                            // Fallback to clipboard
+                            try {
+                                await navigator.clipboard.writeText(shareData.url);
+                                alert("Link copied to clipboard!");
+                            } catch (err) {
+                                console.error("Failed to copy link");
+                            }
+                        }
+                    }}
+                    className="flex items-center space-x-2 hover:text-blue-400 transition-colors"
+                >
                     <Share2 size={18} />
                     <span className="text-sm">Share</span>
                 </button>

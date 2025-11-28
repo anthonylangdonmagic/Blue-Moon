@@ -1,44 +1,38 @@
-import Link from "next/link";
-import { LayoutDashboard, PenTool, User, MessageSquare, Calendar } from "lucide-react";
+import { verifySession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
-export default function AdminLayout({
+export default async function AdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    return (
-        <div className="flex min-h-screen bg-slate-950">
-            {/* Sidebar */}
-            <aside className="w-64 border-r border-slate-800 p-6 hidden md:block">
-                <div className="mb-8">
-                    <h1 className="text-xl font-bold text-white">Blue Moon Admin</h1>
-                </div>
-                <nav className="space-y-2">
-                    <Link href="/admin" className="flex items-center space-x-3 text-slate-400 hover:text-white hover:bg-slate-900 px-4 py-3 rounded-lg transition-colors">
-                        <LayoutDashboard size={20} />
-                        <span>Dashboard</span>
-                    </Link>
-                    <Link href="/admin/write" className="flex items-center space-x-3 text-slate-400 hover:text-white hover:bg-slate-900 px-4 py-3 rounded-lg transition-colors">
-                        <PenTool size={20} />
-                        <span>Write</span>
-                    </Link>
-                    <Link href="/admin/about" className="flex items-center space-x-3 text-slate-400 hover:text-white hover:bg-slate-900 px-4 py-3 rounded-lg transition-colors">
-                        <User size={20} />
-                        <span>Edit About</span>
-                    </Link>
-                    <Link href="/admin/inbox" className="flex items-center space-x-3 text-slate-400 hover:text-white hover:bg-slate-900 px-4 py-3 rounded-lg transition-colors">
-                        <MessageSquare size={20} />
-                        <span>Inbox</span>
-                    </Link>
-                    <Link href="/admin/events" className="flex items-center space-x-3 text-slate-400 hover:text-white hover:bg-slate-900 px-4 py-3 rounded-lg transition-colors">
-                        <Calendar size={20} />
-                        <span>Events & Blast</span>
-                    </Link>
-                </nav>
-            </aside>
+    const session = await verifySession();
 
-            {/* Main Content */}
-            <main className="flex-1 p-8 overflow-y-auto">
+    if (!session) {
+        redirect('/login');
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <nav className="bg-white shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between h-16">
+                        <div className="flex">
+                            <div className="flex-shrink-0 flex items-center">
+                                <span className="text-xl font-bold text-gray-800">Blue Moon Admin</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center">
+                            <form action="/api/auth/logout" method="POST">
+                                <button type="submit" className="text-sm text-gray-500 hover:text-gray-700">
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 {children}
             </main>
         </div>

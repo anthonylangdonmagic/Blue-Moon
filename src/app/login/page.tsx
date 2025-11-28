@@ -1,73 +1,62 @@
-"use client";
+'use client';
 
-import { createBrowserClient } from "@supabase/ssr";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
     const router = useRouter();
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    async function handleLogin(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        setLoading(true);
-        setError(null);
+        setError('');
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ password }),
         });
 
-        if (error) {
-            setError(error.message);
-            setLoading(false);
+        if (res.ok) {
+            router.push('/admin');
         } else {
-            router.push("/admin");
-            router.refresh();
+            setError('Invalid password');
         }
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4">
-            <div className="max-w-md w-full bg-slate-900/50 border border-slate-800 p-8 rounded-2xl">
-                <h1 className="text-2xl font-bold text-white mb-6 text-center">Admin Login</h1>
-                <form onSubmit={handleLogin} className="space-y-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
+                <div className="text-center">
+                    <h2 className="text-3xl font-bold text-gray-900">Admin Login</h2>
+                </div>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     <div>
-                        <label className="block text-sm text-slate-400 mb-1">Email</label>
+                        <label htmlFor="password" className="sr-only">
+                            Password
+                        </label>
                         <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm text-slate-400 mb-1">Password</label>
-                        <input
+                            id="password"
+                            name="password"
                             type="password"
+                            required
+                            className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm"
+                            placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
                         />
                     </div>
-                    {error && <p className="text-red-400 text-sm">{error}</p>}
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-lg transition-colors disabled:opacity-50"
-                    >
-                        {loading ? "Logging in..." : "Login"}
-                    </button>
+
+                    {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+
+                    <div>
+                        <button
+                            type="submit"
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                        >
+                            Sign in
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

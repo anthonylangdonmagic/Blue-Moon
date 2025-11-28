@@ -5,6 +5,7 @@ create extension if not exists "uuid-ossp";
 create table profiles (
   id uuid references auth.users on delete cascade not null primary key,
   email text,
+  name text, -- Added name field
   is_admin boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -182,12 +183,45 @@ create policy "Admins can update (soft delete) comments."
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, email, is_admin)
-  values (new.id, new.email, false);
+  insert into public.profiles (id, email, name, is_admin)
+  values (
+    new.id, 
+    new.email, 
+    new.raw_user_meta_data->>'name', -- Extract name from metadata
+    false
+  );
   return new;
 end;
 $$ language plpgsql security definer;
 
-create trigger on_auth_user_created
-  after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Storage Policies (Run these in Supabase SQL Editor)
+-- Ensure the bucket exists
+insert into storage.buckets (id, name, public)
+values ('post-media', 'post-media', true)
+on conflict (id) do nothing;
+
+-- Enable RLS on objects
+alter table storage.objects enable row level security;
+
+-- Allow public read access to post-media
+create policy "Public Access"
+on storage.objects for select
+using ( bucket_id = 'post-media' );
+
+-- Allow admins to upload to post-media
+create policy "Admin Upload"
+on storage.objects for insert
+with check (
+  bucket_id = 'post-media'
+  and auth.role() = 'authenticated'
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+    and is_admin = true
+  )
+);
+
+-- Migration: Add name column to existing profiles (Run in SQL Editor)
+alter table public.profiles add column if not exists name text;
