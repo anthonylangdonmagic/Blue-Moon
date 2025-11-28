@@ -4,8 +4,8 @@ import { Readable } from 'stream';
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
 export async function getDriveClient() {
-  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
+  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n').trim();
 
   if (!clientEmail || !privateKey) {
     throw new Error('Missing Google Service Account credentials');
