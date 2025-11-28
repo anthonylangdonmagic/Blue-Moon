@@ -6,17 +6,23 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const email = body.email?.trim();
+        const email = body.email?.trim().toLowerCase();
         const password = body.password?.trim();
 
         console.log(`[Login Attempt] Email: ${email}`);
+
+        // Check for critical env vars
+        if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
+            console.error("[Login Error] Missing Google Credentials in Env");
+            return NextResponse.json({ error: "Server Configuration Error: Missing Credentials" }, { status: 500 });
+        }
 
         if (!email || !password) {
             return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
         }
 
         const db = await getDatabase();
-        const user = db.users?.find((u) => u.email === email);
+        const user = db.users?.find((u) => u.email.toLowerCase() === email);
 
         if (!user) {
             console.log(`[Login Failed] User not found: ${email}`);

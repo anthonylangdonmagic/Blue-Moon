@@ -107,16 +107,38 @@ export async function getDatabase(): Promise<Database> {
 
         if (dbChanged) {
             console.log("Saving database changes...");
-            await saveDatabase(db);
-            console.log("Database saved successfully.");
+            try {
+                await saveDatabase(db);
+                console.log("Database saved successfully.");
+            } catch (saveError) {
+                console.error("Failed to save database (returning in-memory copy):", saveError);
+                // Do NOT throw or return INITIAL_DB here. 
+                // We want to return 'db' so the user can at least login with the in-memory admin.
+            }
         }
-        // -----------------------
 
         return db;
 
     } catch (error) {
         console.error('Error fetching database:', error);
-        return INITIAL_DB;
+        // If we fail to even read/parse, we should still try to return a DB with the admin user
+        // so they can login.
+        const fallbackDB = { ...INITIAL_DB };
+        // Seed admin in fallback
+        const adminEmail = 'anthonylangdonmagic@gmail.com';
+        const adminPassword = 'Johnnycash11$';
+        const { hashPassword } = await import('./password');
+        const hashedPassword = await hashPassword(adminPassword);
+
+        fallbackDB.users = [{
+            id: uuidv4(),
+            email: adminEmail,
+            password_hash: hashedPassword,
+            role: 'admin',
+            created_at: new Date().toISOString()
+        }];
+
+        return fallbackDB;
     }
 }
 
