@@ -6,19 +6,29 @@ import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request: Request) {
     try {
-        const { email, password } = await request.json();
+        const body = await request.json();
+        const email = body.email?.trim().toLowerCase();
+        const password = body.password?.trim();
+
+        console.log(`[Signup Attempt] Email: ${email}`);
+
+        // Check for critical env vars
+        if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
+            console.error("[Signup Error] Missing Google Credentials in Env");
+            return NextResponse.json({ error: "Server Configuration Error: Missing Credentials" }, { status: 500 });
+        }
 
         if (!email || !password) {
             return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
         }
 
         const db = await getDatabase();
-
         if (!db.users) db.users = [];
 
-        const existingUser = db.users.find((u) => u.email === email);
+        const existingUser = db.users.find((u) => u.email.toLowerCase() === email);
 
         if (existingUser) {
+            console.log(`[Signup Failed] User already exists: ${email}`);
             return NextResponse.json({ error: "User already exists" }, { status: 409 });
         }
 
@@ -32,7 +42,14 @@ export async function POST(request: Request) {
         };
 
         db.users.push(newUser);
-        await saveDatabase(db);
+
+        try {
+            await saveDatabase(db);
+            console.log(`[Signup Success] User created: ${email}`);
+        } catch (dbError) {
+            console.error("[Signup Error] Failed to save to database:", dbError);
+            return NextResponse.json({ error: "Failed to create account. Please try again later." }, { status: 500 });
+        }
 
         await createSession(newUser.id, newUser.email, newUser.role);
 
