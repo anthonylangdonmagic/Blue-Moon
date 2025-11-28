@@ -85,26 +85,11 @@ export async function getDatabase(): Promise<Database> {
 
         let dbChanged = false;
 
-        if (adminIndex === -1) {
-            console.log("Seeding Admin User...");
-            const hashedPassword = await hashPassword(adminPassword);
-            db.users.push({
-                id: uuidv4(),
-                email: adminEmail,
-                console.error('Error fetching database:', error);
-                return INITIAL_DB;
-            }
-}
 
-        export async function saveDatabase(data: Database) {
-            if (!FOLDER_ID) throw new Error('GOOGLE_DRIVE_FOLDER_ID is not set');
-
-            const buffer = Buffer.from(JSON.stringify(data, null, 2));
-
-            const file = await findFile(DB_FILENAME, FOLDER_ID);
-            if (file) {
-                await updateFile(file.id!, buffer, 'application/json');
-            } else {
-                await uploadFile(buffer, DB_FILENAME, 'application/json', FOLDER_ID);
-            }
+        const file = await findFile(DB_FILENAME, FOLDER_ID);
+        if (file) {
+            await updateFile(file.id!, buffer, 'application/json');
+        } else {
+            await uploadFile(buffer, DB_FILENAME, 'application/json', FOLDER_ID);
         }
+    }
