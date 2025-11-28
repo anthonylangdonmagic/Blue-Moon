@@ -46,9 +46,11 @@ export async function POST(request: Request) {
         try {
             await saveDatabase(db);
             console.log(`[Signup Success] User created: ${email}`);
-        } catch (dbError) {
+        } catch (dbError: any) {
             console.error("[Signup Error] Failed to save to database:", dbError);
-            return NextResponse.json({ error: "Failed to create account. Please try again later." }, { status: 500 });
+            // Return specific error for debugging
+            const errorMessage = dbError?.message || "Unknown error";
+            return NextResponse.json({ error: `Failed to save account: ${errorMessage}` }, { status: 500 });
         }
 
         await createSession(newUser.id, newUser.email, newUser.role);
