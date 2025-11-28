@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Moon } from "lucide-react";
 
-export default function LoginPage() {
+export default function SignupPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -18,7 +18,7 @@ export default function LoginPage() {
         setError("");
 
         try {
-            const res = await fetch("/api/auth/login", {
+            const res = await fetch("/api/auth/signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
@@ -27,13 +27,9 @@ export default function LoginPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || "Login failed");
+                setError(data.error || "Signup failed");
             } else {
-                if (data.role === 'admin') {
-                    router.push("/admin");
-                } else {
-                    router.push("/");
-                }
+                router.push("/");
                 router.refresh();
             }
         } catch (err) {
@@ -52,8 +48,8 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                <h2 className="text-2xl font-bold text-white text-center mb-2">Welcome Back</h2>
-                <p className="text-slate-400 text-center mb-8">Sign in to your account</p>
+                <h2 className="text-2xl font-bold text-white text-center mb-2">Create Account</h2>
+                <p className="text-slate-400 text-center mb-8">Join the Blue Moon community</p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -91,14 +87,14 @@ export default function LoginPage() {
                         disabled={loading}
                         className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-lg transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {loading ? "Signing in..." : "Sign In"}
+                        {loading ? "Create Account" : "Sign Up"}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center text-sm text-slate-400">
-                    Don't have an account?{" "}
-                    <Link href="/signup" className="text-blue-400 hover:text-blue-300 transition-colors">
-                        Sign up
+                    Already have an account?{" "}
+                    <Link href="/login" className="text-blue-400 hover:text-blue-300 transition-colors">
+                        Sign in
                     </Link>
                 </div>
             </div>

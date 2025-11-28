@@ -4,7 +4,7 @@ import { verifySession } from "@/lib/auth";
 export async function middleware(request: NextRequest) {
     if (request.nextUrl.pathname.startsWith("/admin")) {
         const session = await verifySession();
-        if (!session) {
+        if (!session || session.role !== 'admin') {
             return NextResponse.redirect(new URL("/login", request.url));
         }
     }

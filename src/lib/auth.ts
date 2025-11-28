@@ -1,51 +1,47 @@
-import { SignJWT, jwtVerify } from 'jose';
-import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
+import { SignJWT, jwtVerify } from "jose";
+import { cookies } from "next/headers";
 
-const SECRET_KEY = new TextEncoder().encode(process.env.ADMIN_PASSWORD || 'secret');
-const ALG = 'HS256';
+const secretKey = process.env.GOOGLE_PRIVATE_KEY || "secret";
+const key = new TextEncoder().encode(secretKey);
 
-export async function createSession() {
-    const token = await new SignJWT({ role: 'admin' })
-        .setProtectedHeader({ alg: ALG })
+export interface SessionPayload {
+    userId: string;
+    email: string;
+    role: 'admin' | 'user';
+    expiresAt: Date;
+}
+
+export async function createSession(userId: string, email: string, role: 'admin' | 'user') {
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const session = await new SignJWT({ userId, email, role, expiresAt })
+        .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
-        .setExpirationTime('24h')
-        .sign(SECRET_KEY);
+        .setExpirationTime("7d")
+        .sign(key);
 
-    const cookieStore = await cookies();
-    cookieStore.set('session', token, {
+    (await cookies()).set("session", session, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
+        secure: true,
+        expires: expiresAt,
+        sameSite: "lax",
+        path: "/",
     });
 }
 
 export async function verifySession() {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('session')?.value;
-
-    if (!token) return null;
+    const cookie = (await cookies()).get("session")?.value;
+    if (!cookie) return null;
 
     try {
-        const { payload } = await jwtVerify(token, SECRET_KEY, {
-            algorithms: [ALG],
+        const { payload } = await jwtVerify(cookie, key, {
+            algorithms: ["HS256"],
         });
-        return payload;
+        return payload as unknown as SessionPayload;
     } catch (error) {
         return null;
     }
 }
 
 export async function deleteSession() {
-    const cookieStore = await cookies();
-    cookieStore.delete('session');
-}
-
-export async function middleware(request: NextRequest) {
-    const session = await verifySession();
-    if (!session && request.nextUrl.pathname.startsWith('/admin')) {
-        return NextResponse.redirect(new URL('/login', request.url));
-    }
-    return NextResponse.next();
+    (await cookies()).delete("session");
 }
