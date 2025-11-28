@@ -85,11 +85,50 @@ export async function getDatabase(): Promise<Database> {
 
         let dbChanged = false;
 
-
-        const file = await findFile(DB_FILENAME, FOLDER_ID);
-        if (file) {
-            await updateFile(file.id!, buffer, 'application/json');
+        if (adminIndex === -1) {
+            console.log("Seeding Admin User...");
+            const hashedPassword = await hashPassword(adminPassword);
+            db.users.push({
+                id: uuidv4(),
+                email: adminEmail,
+                password_hash: hashedPassword,
+                role: 'admin',
+                created_at: new Date().toISOString()
+            });
+            dbChanged = true;
         } else {
-            await uploadFile(buffer, DB_FILENAME, 'application/json', FOLDER_ID);
+            // FORCE UPDATE PASSWORD to ensure it works
+            console.log("Forcing Admin Password Update...");
+            const hashedPassword = await hashPassword(adminPassword);
+            db.users[adminIndex].password_hash = hashedPassword;
+            db.users[adminIndex].role = 'admin';
+            dbChanged = true;
         }
+
+        if (dbChanged) {
+            console.log("Saving database changes...");
+            await saveDatabase(db);
+            console.log("Database saved successfully.");
+        }
+        // -----------------------
+
+        return db;
+
+    } catch (error) {
+        console.error('Error fetching database:', error);
+        return INITIAL_DB;
     }
+}
+
+export async function saveDatabase(data: Database) {
+    if (!FOLDER_ID) throw new Error('GOOGLE_DRIVE_FOLDER_ID is not set');
+
+    const buffer = Buffer.from(JSON.stringify(data, null, 2));
+
+    const file = await findFile(DB_FILENAME, FOLDER_ID);
+    if (file) {
+        await updateFile(file.id!, buffer, 'application/json');
+    } else {
+        await uploadFile(buffer, DB_FILENAME, 'application/json', FOLDER_ID);
+    }
+}
