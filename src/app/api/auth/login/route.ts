@@ -5,7 +5,11 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
     try {
-        const { email, password } = await request.json();
+        const body = await request.json();
+        const email = body.email?.trim();
+        const password = body.password?.trim();
+
+        console.log(`[Login Attempt] Email: ${email}`);
 
         if (!email || !password) {
             return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
@@ -15,12 +19,15 @@ export async function POST(request: Request) {
         const user = db.users?.find((u) => u.email === email);
 
         if (!user) {
+            console.log(`[Login Failed] User not found: ${email}`);
             return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
         }
 
         const isValid = await verifyPassword(password, user.password_hash);
+        console.log(`[Login Debug] User found. Role: ${user.role}. Password Valid: ${isValid}`);
 
         if (!isValid) {
+            console.log(`[Login Failed] Invalid password for: ${email}`);
             return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
         }
 
